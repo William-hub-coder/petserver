@@ -1,0 +1,130 @@
+/**
+ * 宠伴 PetPal Design Tokens — 温暖严选（Warm Curated）
+ * 对齐 UI 设计指导方案 v1.0；H5 / 后续 RN 共用语义。
+ * 铁律：金色仅严选体系；一页一个暖橙 CTA；阴影用品牌色相非纯黑。
+ */
+:root {
+  /* Brand */
+  --color-primary: #1a9e8e;
+  --color-brand: #1a9e8e;
+  --color-primary-dark: #14756b;
+  --color-brand-dark: #14756b;
+  --color-primary-light: #e8f6f4;
+  --color-brand-light: #e8f6f4;
+
+  /* Accent — 仅主 CTA / AI FAB / 价格强调 */
+  --color-accent: #ff8c5a;
+  --color-warm: #ff8c5a;
+  --color-accent-light: #fff0e8;
+
+  /* Gold — 仅严选徽章体系 */
+  --color-trust-gold: #d4a03a;
+  --color-gold: #d4a03a;
+  --color-gold-dark: #b8862e;
+  --color-trust-gold-bg: #fbf3e0;
+  --color-gold-bg: #fbf3e0;
+  --color-gold-light: #fbf3e0;
+
+  /* Trust / status */
+  --color-trust-green: #3da655;
+  --color-trust: #3da655;
+  --color-trust-light: #ecf7ee;
+  --color-success: #3da655;
+  --color-warning: #ffb84d;
+  --color-warn: #ffb84d;
+  --color-warn-light: #fff6e8;
+  --color-danger: #ff5252;
+  --color-danger-light: #ffecec;
+  --color-info: #4a90d9;
+  --color-info-light: #ebf3fb;
+
+  /* Neutrals */
+  --color-text-primary: #1a1a2e;
+  --color-ink: #1a1a2e;
+  --color-text-secondary: #6b7280;
+  --color-sub: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-faint: #9ca3af;
+  --color-background: #f7f8fa;
+  --color-page: #f7f8fa;
+  --color-bg: #f7f8fa;
+  --color-card-bg: #ffffff;
+  --color-card: #ffffff;
+  --color-border: #e5e7eb;
+  --color-line: #e5e7eb;
+  --color-divider: #f0f1f3;
+  --color-overlay: rgba(26, 26, 46, 0.4);
+  --color-surface-soft: #e8f6f4;
+  --color-ink-soft: #2a3540;
+  --color-skeleton: #ebedf0;
+
+  /* Header wash */
+  --gradient-brand-head: linear-gradient(180deg, #e1f4f1 0%, #f7f8fa 72%);
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 16px;
+  --radius-full: 999px;
+
+  /* 有色阴影 — 禁止纯黑 */
+  --shadow-card: 0 4px 10px rgba(26, 158, 142, 0.07);
+  --shadow-elevated: 0 10px 28px rgba(26, 158, 142, 0.12);
+  --shadow-fixed: 0 -6px 24px rgba(26, 158, 142, 0.08);
+  --shadow-trust: 0 2px 8px rgba(212, 160, 58, 0.28);
+  --shadow-fab: 0 8px 20px rgba(255, 140, 90, 0.4);
+
+  --font-family: "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --font-display-size: 28px;
+  --font-h1-size: 22px;
+  --font-h2-size: 18px;
+  --font-h3-size: 16px;
+  --font-body-size: 14px;
+  --font-caption-size: 13px;
+  --font-small-size: 12px;
+  --font-badge-size: 11px;
+
+  --page-max-width: 390px;
+  --page-gutter: 16px;
+  --tabbar-height: 60px;
+  --fab-size: 52px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --press-scale: 0.97;
+  --press-in: 110ms;
+  --press-out: 170ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  color: var(--color-ink);
+  background: var(--color-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

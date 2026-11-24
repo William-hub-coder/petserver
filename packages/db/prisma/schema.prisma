@@ -1,0 +1,774 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Local MVP default: SQLite. For Postgres, set provider = "postgresql"
+  // and DATABASE_URL=postgresql://petpal:petpal@localhost:5432/petpal
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PetType {
+  cat
+  dog
+  bird
+  reptile
+  amphibian
+  small_mammal
+  aquatic
+  other
+}
+
+enum MerchantStatus {
+  draft
+  pending_inspect
+  online
+  rejected
+  offline
+}
+
+enum CreditGrade {
+  S
+  A
+  B
+  C
+  D
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  verified
+  reviewed
+}
+
+enum MessageChannel {
+  inbox
+  push
+  sms
+}
+
+enum MessageType {
+  system
+  order
+  marketing
+  /// 会话提醒（双向聊天新消息）
+  chat
+}
+
+enum ConversationKind {
+  merchant_support
+  doctor_consult
+  mall_support
+  /// 领养 / 宠物售卖沟通
+  adoption
+}
+
+enum PetListingChannel {
+  /// 领养（可为无偿或有偿）
+  adopt
+  /// 宠物售卖（入驻宠物店 / 繁育场）
+  sale
+}
+
+enum PetListingStatus {
+  draft
+  pending_review
+  published
+  reserved
+  closed
+  rejected
+}
+
+enum ConversationStatus {
+  open
+  closed
+}
+
+enum ChatMsgType {
+  text
+  system
+}
+
+enum ModerationStatus {
+  clean
+  flagged
+  blocked
+}
+
+model User {
+  id                String    @id @default(cuid())
+  phone             String    @unique
+  nickname          String    @default("新用户")
+  avatarUrl         String?
+  privacyAcceptedAt DateTime?
+  privacyVersion    String?
+  onboardingSkippedAt DateTime?
+  role              String    @default("user") // user | merchant | admin
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  pets              Pet[]
+  ownedMerchants    Merchant[] @relation("MerchantOwner")
+  bookings          Booking[]
+  reviews           Review[]
+  messages          Message[]
+  conversations     Conversation[] @relation("ConversationUser")
+  chatMessages      ChatMessage[]
+  agentSessions     AgentSession[]
+  refreshTokens     RefreshToken[]
+  cartItems         CartItem[]
+  shopOrders        ShopOrder[]
+  productReviews    ProductReview[]
+  petListings       PetListing[]          @relation("ListingPublisher")
+  adoptApplications PetAdoptApplication[]
+  communityPosts    CommunityPost[]
+  communityLikes    CommunityLike[]
+  communityComments CommunityComment[]
+
+  @@map("user_users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_refresh_tokens")
+}
+
+model Pet {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  type       PetType   @default(other)
+  breed      String?
+  /// male | female | unknown
+  gender     String?
+  birthday   DateTime?
+  weightKg   Float?
+  sterilized Boolean   @default(false)
+  vaccinated Boolean   @default(false)
+  avatarUrl  String?
+  /// 饮食要点（爬宠垫材喂食、鸟粮配比等）
+  dietNote   String?
+  /// 饲养环境（笼箱/缸/爬箱温湿度等）
+  habitatNote String?
+  /// 特殊需求（过敏、分离焦虑、禁食药物等）
+  specialNeeds String?
+  /// 备注
+  notes      String?
+  /// rescued | purchased | gifted | bred | other
+  adoptionSource String?
+  tags       Json?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([userId])
+  @@map("user_pets")
+}
+
+model Merchant {
+  id             String         @id @default(cuid())
+  name           String
+  category       String
+  status         MerchantStatus @default(draft)
+  creditScore    Int            @default(70)
+  creditGrade    CreditGrade    @default(B)
+  rating         Float          @default(0)
+  reviewCount    Int            @default(0)
+  lat            Float?
+  lng            Float?
+  address        String?
+  city           String         @default("上海")
+  district       String?
+  openTime       String?
+  closeTime      String?
+  priceLevel     String?
+  coverUrl       String?
+  coverTone      String?
+  highlight      String?
+  tags           Json?
+  selectedBadge  Boolean        @default(false)
+  lastInspectedAt DateTime?
+  ownerUserId    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  owner          User?              @relation("MerchantOwner", fields: [ownerUserId], references: [id])
+  services       MerchantService[]
+  bookings       Booking[]
+  reviews        Review[]
+  creditLogs     CreditScoreLog[]
+  products       Product[]
+  conversations  Conversation[]
+  petListings    PetListing[]
+
+  @@index([status, city])
+  @@index([category])
+  @@map("merchant_merchants")
+}
+
+/// 商户可预约服务项（一张服务单品）。
+///
+/// kind 决定履约形态；BookingService.create 会把 kind 拷贝到 Booking.channel：
+/// | kind            | 用户端入口           | 完成方式              | 创建校验        |
+/// |-----------------|----------------------|-----------------------|-----------------|
+/// | onsite          | 门店详情 / 寄养 Tab  | 商家 verify 扫码      | 无特殊必填      |
+/// | online_consult  | 医疗 → 线上问诊      | 用户 complete         | note 必填       |
+/// | home_visit      | 上门寄养 → 上门服务  | 用户 complete         | address 必填    |
+///
+/// 目录查询：GET /service-catalog?kind=...（见 ServiceCatalogService）
+/// 扩展种子：prisma/seed-extra-services.ts（问诊 ¥5、上门遛狗等）
+model MerchantService {
+  id          String  @id @default(cuid())
+  merchantId  String
+  name        String
+  /// 标价（分）。问诊种子为 500（¥5 服务费）；「结束后酌情补收」尚未落库
+  priceCents  Int
+  durationMin Int     @default(30)
+  enabled     Boolean @default(true)
+  /// onsite | online_consult | home_visit（禁止用其它随意字符串，业务按枚举分支）
+  kind        String  @default("onsite")
+  /// 面向用户的说明：合规提示、服务范围、自备物品等
+  description String?
+
+  merchant Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([merchantId])
+  @@index([kind])
+  @@map("merchant_services")
+}
+
+/// 服务预约单。
+///
+/// status 主路径：confirmed → verified → reviewed（或 cancelled）。
+/// channel 决定 verified 由谁触发：onsite=商家核销；online_consult/home_visit=用户确认完成。
+/// amountCents 为下单时服务价格快照，后续改价不影响历史单。
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String
+  merchantId      String
+  petId           String?
+  serviceId       String
+  status          BookingStatus @default(confirmed)
+  bookingAt       DateTime
+  /// 核销/凭证码；到店扫码用；线上上门也可展示但不作为完成条件
+  verifyCode      String        @unique
+  amountCents     Int           @default(0)
+  /// 履约渠道：onsite | online_consult | home_visit（创建时从服务 kind 拷贝，勿前端直传）
+  channel         String        @default("onsite")
+  /// 上门地址快照（home_visit）；下单后不随用户改地址而变
+  addressSnapshot String?
+  /// 问诊症状（online_consult）或上门饲喂/门禁备注（home_visit）
+  note            String?
+  /// 上门服务点坐标（由 addressSnapshot geocode，GCJ-02）
+  destLat         Float?
+  destLng         Float?
+  /// 接单服务者用户 id（MVP 可空，live 用 mock 轨迹）
+  providerUserId  String?
+  /// assigned | en_route | on_site | done（上门履约细粒度；到店/问诊可空）
+  servicePhase    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  verifiedAt      DateTime?
+  cancelledAt     DateTime?
+
+  user     User            @relation(fields: [userId], references: [id])
+  merchant Merchant        @relation(fields: [merchantId], references: [id])
+  pet      Pet?            @relation(fields: [petId], references: [id])
+  service  MerchantService @relation(fields: [serviceId], references: [id])
+  review   Review?
+
+  @@index([userId])
+  @@index([merchantId, status])
+  @@index([channel])
+  @@map("merchant_bookings")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  userId      String
+  merchantId  String
+  serviceId   String?
+  serviceName String?
+  rating      Int
+  content     String?
+  /// 体验标签，如 ["环境干净","态度专业","性价比高"]
+  tags        Json?
+  images      Json?
+  helpfulCount Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId, rating])
+  @@index([merchantId, createdAt])
+  @@map("merchant_reviews")
+}
+
+model CreditScoreLog {
+  id          String   @id @default(cuid())
+  merchantId  String
+  scoreBefore Int
+  scoreAfter  Int
+  reason      String
+  createdAt   DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId])
+  @@map("merchant_credit_score_logs")
+}
+
+model Message {
+  id        String         @id @default(cuid())
+  userId    String
+  channel   MessageChannel @default(inbox)
+  title     String
+  body      String
+  type      MessageType    @default(system)
+  /// 可选：会话提醒深链到 Conversation
+  conversationId String?
+  readAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@map("message_messages")
+}
+
+/// 用户 ↔ 签约门店 / 医生 / 电商客服 / 领养售宠 双向会话
+model Conversation {
+  id             String             @id @default(cuid())
+  kind           ConversationKind
+  status         ConversationStatus @default(open)
+  userId         String
+  merchantId     String
+  /// doctor_consult 绑定预约单（唯一）
+  bookingId      String?            @unique
+  /// adoption 绑定 PetListing
+  listingId      String?
+  lastMsgAt      DateTime?
+  lastPreview    String?
+  userUnread     Int                @default(0)
+  merchantUnread Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  user     User          @relation("ConversationUser", fields: [userId], references: [id], onDelete: Cascade)
+  merchant Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  listing  PetListing?   @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+  flags    ModerationFlag[]
+
+  /// merchant_support / mall_support 由服务层按 userId+merchantId+kind upsert；问诊靠 bookingId 唯一
+  @@index([userId, merchantId, kind])
+  @@index([listingId])
+  @@index([userId, lastMsgAt])
+  @@index([merchantId, lastMsgAt])
+  @@map("message_conversations")
+}
+
+/// 领养（无偿/有偿）与宠物售卖（入驻店/繁育场）；与商城用品严格分离
+model PetListing {
+  id              String            @id @default(cuid())
+  channel         PetListingChannel
+  status          PetListingStatus  @default(draft)
+  title           String
+  species         String
+  breed           String?
+  gender          String?
+  ageMonths       Int?
+  city            String            @default("上海")
+  district        String?
+  address         String?
+  lat             Float?
+  lng             Float?
+  coverUrl        String?
+  images          Json?
+  vaccinated      Boolean           @default(false)
+  sterilized      Boolean           @default(false)
+  /// 售卖必填：经营/繁育许可证号；有偿领养可选
+  licenseNo       String?
+  /// 售卖必填：检疫/健康证明摘要
+  quarantineNote  String?
+  /// 领养可为 0（无偿）或有偿金额；售卖为标价（分）
+  priceCents      Int               @default(0)
+  description     String?
+  merchantId      String
+  publisherUserId String
+  reviewNote      String?
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  merchant      Merchant              @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  publisher     User                  @relation("ListingPublisher", fields: [publisherUserId], references: [id], onDelete: Cascade)
+  applications  PetAdoptApplication[]
+  conversations Conversation[]
+
+  @@index([status, channel, city])
+  @@index([merchantId])
+  @@index([publisherUserId])
+  @@map("pet_listings")
+}
+
+model PetAdoptApplication {
+  id              String   @id @default(cuid())
+  listingId       String
+  userId          String
+  motive          String
+  experience      String?
+  acceptHomeVisit Boolean  @default(true)
+  /// pending | accepted | rejected
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+
+  listing PetListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt])
+  @@index([userId])
+  @@map("pet_adopt_applications")
+}
+
+model ChatMessage {
+  id               String           @id @default(cuid())
+  conversationId   String
+  senderUserId     String
+  /// user | merchant | doctor | system
+  senderRole       String
+  type             ChatMsgType      @default(text)
+  body             String
+  moderationStatus ModerationStatus @default(clean)
+  createdAt        DateTime         @default(now())
+
+  conversation Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User             @relation(fields: [senderUserId], references: [id], onDelete: Cascade)
+  flags        ModerationFlag[]
+
+  @@index([conversationId, createdAt])
+  @@map("message_chat_messages")
+}
+
+model ModerationFlag {
+  id             String   @id @default(cuid())
+  chatMessageId  String?
+  conversationId String?
+  reason         String
+  /// open | dismissed | actioned
+  status         String   @default("open")
+  reporterUserId String?
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+  resolveNote    String?
+
+  chatMessage  ChatMessage?  @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("message_moderation_flags")
+}
+
+/// AI 助手会话（与人商 Conversation 分离；Python 不直连本表）
+model AgentSession {
+  id           String    @id @default(cuid())
+  userId       String?
+  /// 游客客户端 session 键（登录前）
+  guestKey     String?
+  summary      String?
+  lastMsgAt    DateTime?
+  /// 合并到登录用户会话后指向目标 session
+  mergedIntoId String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user     User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AgentMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([guestKey])
+  @@index([mergedIntoId])
+  @@map("agent_sessions")
+}
+
+model AgentMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  /// user | assistant | system | tool
+  role      String
+  content   String
+  intent    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@map("agent_messages")
+}
+
+enum ProductStatus {
+  draft
+  on_sale
+  off_sale
+}
+
+enum ShopOrderStatus {
+  pending_pay
+  paid
+  shipped
+  delivering
+  completed
+  cancelled
+}
+
+/// 严选商城商品（不含活体交易）
+model Product {
+  id                String        @id @default(cuid())
+  merchantId        String
+  name              String
+  category          String
+  subtitle          String?
+  coverTone         String?
+  /// 商品封面图（Unsplash 等外链）
+  coverUrl          String?
+  priceCents        Int
+  originalPriceCents Int?
+  stock             Int           @default(0)
+  sales             Int           @default(0)
+  rating            Float         @default(0)
+  reviewCount       Int           @default(0)
+  unit              String        @default("件")
+  tags              Json?
+  detail            String?
+  specs             Json?
+  status            ProductStatus @default(on_sale)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  merchant   Merchant        @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems ShopOrderItem[]
+  reviews    ProductReview[]
+
+  @@index([status, category])
+  @@index([merchantId])
+  @@map("shop_products")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  qty       Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("shop_cart_items")
+}
+
+model ShopOrder {
+  id              String          @id @default(cuid())
+  userId          String
+  status          ShopOrderStatus @default(pending_pay)
+  totalCents      Int
+  freightCents    Int             @default(0)
+  addressSnapshot String?
+  remark          String?
+  paidAt          DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id])
+  items    ShopOrderItem[]
+  delivery DeliveryMission?
+
+  @@index([userId, createdAt])
+  @@map("shop_orders")
+}
+
+/// 商城配送任务（美团/淘宝式在途追踪）。MVP provider=mock 自动推进轨迹。
+model DeliveryMission {
+  id            String   @id @default(cuid())
+  shopOrderId   String   @unique
+  /// assigned | picking | delivering | arrived | done | cancelled
+  status        String   @default("assigned")
+  courierName   String?
+  courierPhone  String?
+  originLat     Float?
+  originLng     Float?
+  destLat       Float?
+  destLng       Float?
+  destAddress   String?
+  /// mock | partner（真实运力 webhook）
+  provider      String   @default("mock")
+  /// 0~1 模拟进度
+  progress      Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shopOrder ShopOrder @relation(fields: [shopOrderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("shop_delivery_missions")
+}
+
+/// 通用位置轨迹点：配送骑手 / 上门服务者 / 爱宠锚点
+model LocationTrack {
+  id          String   @id @default(cuid())
+  /// delivery | home_visit
+  subjectType String
+  subjectId   String
+  /// courier | provider | pet_anchor
+  role        String
+  lat         Float
+  lng         Float
+  accuracyM   Float?
+  heading     Float?
+  speed       Float?
+  /// device | mock | partner_webhook
+  source      String   @default("mock")
+  recordedAt  DateTime @default(now())
+
+  @@index([subjectType, subjectId, recordedAt])
+  @@map("location_tracks")
+}
+
+model ShopOrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  priceCents  Int
+  qty         Int
+  coverTone   String?
+  coverUrl    String?
+
+  order   ShopOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id])
+  review  ProductReview?
+
+  @@index([orderId])
+  @@map("shop_order_items")
+}
+
+/// 商品购后评价（需对应订单行，供后续用户选购参考）
+model ProductReview {
+  id           String   @id @default(cuid())
+  productId    String
+  userId       String
+  orderItemId  String   @unique
+  rating       Int
+  content      String?
+  tags         Json?
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItem ShopOrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([productId, rating])
+  @@index([productId, createdAt])
+  @@map("shop_product_reviews")
+}
+
+/// 毛孩子圈子帖子（类小红书 Feed）
+enum CommunityCategory {
+  experience
+  daily
+  help
+  other
+}
+
+enum CommunityMediaType {
+  image
+  video
+  text
+}
+
+enum CommunityPostStatus {
+  published
+  hidden
+}
+
+model CommunityPost {
+  id           String              @id @default(cuid())
+  userId       String
+  title        String
+  content      String              @default("")
+  category     CommunityCategory   @default(daily)
+  mediaType    CommunityMediaType  @default(image)
+  /// 图片/视频 URL 列表（Json 字符串数组）
+  mediaUrls    Json                @default("[]")
+  coverUrl     String?
+  likeCount    Int                 @default(0)
+  commentCount Int                 @default(0)
+  status       CommunityPostStatus @default(published)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes    CommunityLike[]
+  comments CommunityComment[]
+
+  @@index([status, createdAt])
+  @@index([category, status, createdAt])
+  @@index([userId])
+  @@map("community_posts")
+}
+
+model CommunityLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+  @@map("community_likes")
+}
+
+model CommunityComment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([userId])
+  @@map("community_comments")
+}

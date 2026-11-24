@@ -1,0 +1,34 @@
+{
+  "name": "petpal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "宠伴 PetPal — 宠物综合服务平台 monorepo",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:services": "turbo run dev --filter=./services/*",
+    "dev:web": "turbo run dev --filter=./apps/merchant-web --filter=./apps/admin-web --filter=./apps/user-web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "db:generate": "pnpm --filter @petpal/db generate",
+    "db:migrate": "pnpm --filter @petpal/db exec prisma migrate deploy",
+    "db:seed": "pnpm --filter @petpal/db seed",
+    "services:build": "node scripts/start-core-services.mjs --build-only",
+    "services:start": "node scripts/start-core-services.mjs",
+    "agent:dev": "pnpm --dir agents/orchestrator run dev",
+    "agent:gateway": "pnpm --filter @petpal/agent-gateway dev",
+    "agent:ensure": "node scripts/ensure-agent-stack.mjs",
+    "agent:check": "node scripts/ensure-agent-stack.mjs --check",
+    "smoke": "node scripts/smoke-check.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

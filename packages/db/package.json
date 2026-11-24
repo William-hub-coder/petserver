@@ -1,0 +1,33 @@
+{
+  "name": "@petpal/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"lint skipped for db\"",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "tsx prisma/seed.ts && tsx prisma/seed-extra-services.ts && tsx prisma/seed-products.ts && tsx prisma/seed-listings.ts && tsx prisma/seed-community.ts",
+    "seed:core": "tsx prisma/seed.ts",
+    "seed:community": "tsx prisma/seed-community.ts",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "prisma": "^6.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts && tsx prisma/seed-extra-services.ts && tsx prisma/seed-products.ts && tsx prisma/seed-listings.ts && tsx prisma/seed-community.ts"
+  }
+}

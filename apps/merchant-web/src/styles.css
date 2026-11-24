@@ -1,0 +1,165 @@
+@import "@petpal/design-tokens/tokens.css";
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background:
+    radial-gradient(900px 400px at 50% 0%, rgba(26, 158, 142, 0.08), transparent 50%),
+    #e6ebe8;
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.phone-shell {
+  width: 100%;
+  max-width: 375px;
+  min-height: 100vh;
+  background: var(--color-background);
+  position: relative;
+  box-shadow: 0 12px 40px rgba(28, 43, 34, 0.12);
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+}
+
+.font-h2 {
+  font-size: var(--font-h2-size);
+  font-weight: 600;
+  margin: 0;
+}
+.font-h3 {
+  font-size: var(--font-h3-size);
+  font-weight: 600;
+  margin: 0;
+}
+.font-body {
+  font-size: var(--font-body-size);
+}
+.font-caption {
+  font-size: var(--font-caption-size);
+  color: var(--color-text-secondary);
+}
+.font-small {
+  font-size: var(--font-small-size);
+  color: var(--color-text-tertiary);
+}
+
+.card {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(229, 231, 235, 0.75);
+  padding: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary,
+.btn-accent {
+  border: 0;
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+.btn-accent {
+  background: linear-gradient(145deg, #ff9a6a, #ff8c5a);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(255, 140, 90, 0.28);
+}
+.btn-primary:active,
+.btn-accent:active {
+  transform: scale(0.98);
+}
+
+.tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 375px;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 0.5px solid var(--color-divider);
+  box-shadow: 0 -4px 18px rgba(28, 43, 34, 0.06);
+  z-index: 20;
+}
+
+.tabbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.tabbar a.router-link-active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.nav {
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 0.5px solid var(--color-divider);
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.score-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--color-trust-green) calc(var(--p) * 1%), var(--color-divider) 0);
+}
+
+.score-ring > span {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+input.input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0 12px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 158, 142, 0.12);
+}

@@ -1,0 +1,6 @@
+<view class="nav">
+  <navigator url="/pages/tasks/index" open-type="redirect">任务</navigator>
+  <navigator url="/pages/checkin/index" open-type="redirect">签到</navigator>
+  <navigator url="/pages/scorecard/index" open-type="redirect">打分</navigator>
+  <navigator url="/pages/report/index" open-type="redirect">报告</navigator>
+</view>

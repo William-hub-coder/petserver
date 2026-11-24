@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/brand/petpal-logo.png" />
+    <title>宠伴 PetPal</title>
+    <style>
+      /* Vue 挂载前的首屏闪屏，避免白屏闪烁 */
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(165deg, #e8f6f4 0%, #ffffff 48%, #fff5ee 100%);
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
+      #boot-splash.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #boot-splash .stage {
+        position: relative;
+        width: 140px;
+        height: 140px;
+      }
+      #boot-splash img {
+        display: block;
+        width: 140px;
+        height: 140px;
+        border-radius: 32px;
+        object-fit: cover;
+        background: #fff;
+        box-shadow: 0 14px 36px rgba(26, 60, 52, 0.12);
+      }
+      #boot-splash p {
+        position: absolute;
+        top: calc(100% + 18px);
+        left: 50%;
+        margin: 0;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-size: 13px;
+        font-weight: 650;
+        color: #5a6b68;
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="boot-splash">
+      <div class="stage">
+        <img src="/brand/petpal-logo.png" alt="宠伴 PetPal" width="140" height="140" />
+        <p>每一家店，我们都替你看过</p>
+      </div>
+    </div>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

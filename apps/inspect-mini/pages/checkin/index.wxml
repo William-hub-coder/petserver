@@ -1,0 +1,11 @@
+<include src="/utils/nav.wxml" />
+<view class="card">
+  <view style="font-weight:600;font-size:32rpx">到店签到</view>
+  <view style="margin-top:12rpx;color:#666">
+    记录经纬度 + 时间；后续叠加 Wi-Fi BSSID / 蓝牙信标校验。
+  </view>
+  <view style="margin-top:20rpx">纬度：{{lat || '-'}}</view>
+  <view>经度：{{lng || '-'}}</view>
+  <view>结果：{{result || '未签到'}}</view>
+  <button class="btn" bindtap="doCheckIn">模拟签到</button>
+</view>

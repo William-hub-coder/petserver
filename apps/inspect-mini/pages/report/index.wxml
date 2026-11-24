@@ -1,0 +1,13 @@
+<include src="/utils/nav.wxml" />
+<view class="card">
+  <view class="title">考察报告（占位）</view>
+  <view class="sub">总分雷达图 / 照片网格 / 扣分项将在此展示</view>
+  <view style="margin-top:32rpx;text-align:center">
+    <view style="font-size:64rpx;font-weight:700;color:#1a9e8e">86</view>
+    <view class="trust" style="margin-top:12rpx">等级 A · 建议通过</view>
+  </view>
+  <view class="sub" style="margin-top:24rpx">
+    候诊区毛发残留（照片#12，扣2分）；消毒记录近3天空白（照片#21，扣2分）。
+  </view>
+  <button class="btn-accent">提交审核（占位）</button>
+</view>

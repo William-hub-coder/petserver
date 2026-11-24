@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: petpal-postgres
+    environment:
+      POSTGRES_USER: petpal
+      POSTGRES_PASSWORD: petpal
+      POSTGRES_DB: petpal
+    ports:
+      - "5432:5432"
+    volumes:
+      - petpal_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petpal -d petpal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: petpal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - petpal_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: petpal-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: petpal
+      MINIO_ROOT_PASSWORD: petpalsecret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - petpal_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  petpal_pg_data:
+  petpal_redis_data:
+  petpal_minio_data:

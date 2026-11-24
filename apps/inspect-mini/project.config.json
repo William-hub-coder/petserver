@@ -1,0 +1,14 @@
+{
+  "description": "宠伴考察端微信小程序空壳（MVP 过渡版）",
+  "packagename": "petpal-inspect",
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "appid": "touristappid",
+  "projectname": "petpal-inspect",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "urlCheck": false
+  },
+  "miniprogramRoot": "./"
+}

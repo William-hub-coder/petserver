@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/tasks/index",
+    "pages/checkin/index",
+    "pages/scorecard/index",
+    "pages/report/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "宠伴考察",
+    "navigationBarBackgroundColor": "#1A9E8E",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F7F8FA"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,13 @@
+<include src="/utils/nav.wxml" />
+<view class="card">
+  <view style="font-weight:600;font-size:32rpx">SOP 打分卡（医院类示例）</view>
+  <view style="margin-top:12rpx;color:#666">强制点位拍照 / 水印 / 提交校验均为占位。</view>
+  <block wx:for="{{dimensions}}" wx:key="name">
+    <view style="margin-top:18rpx">
+      <view>{{item.name}}（{{item.weight}}）</view>
+      <slider min="0" max="{{item.max}}" value="{{item.score}}" show-value disabled />
+    </view>
+  </block>
+  <button class="btn" bindtap="submit">提交报告（占位）</button>
+  <view wx:if="{{tip}}" style="margin-top:12rpx">{{tip}}</view>
+</view>

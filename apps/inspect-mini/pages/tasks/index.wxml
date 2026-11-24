@@ -1,0 +1,16 @@
+<include src="/utils/nav.wxml" />
+<view class="card">
+  <view class="title">考察任务</view>
+  <view class="sub">商户信息已脱敏 · 正式版配合 MDM 工作机</view>
+  <block wx:for="{{tasks}}" wx:key="id">
+    <view style="margin-top:24rpx;padding-top:20rpx;border-top:1px solid #f0f1f3">
+      <view style="display:flex;justify-content:space-between;align-items:center">
+        <view style="font-weight:600">{{item.merchantAlias}}</view>
+        <view class="trust">待考察</view>
+      </view>
+      <view class="sub">{{item.category}} · {{item.status}}</view>
+    </view>
+  </block>
+  <button class="btn" bindtap="loadTasks">刷新任务</button>
+  <view wx:if="{{error}}" style="color:#ff5252;margin-top:12rpx;font-size:24rpx">{{error}}</view>
+</view>

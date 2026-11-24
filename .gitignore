@@ -1,0 +1,40 @@
+node_modules/
+dist/
+build/
+.turbo/
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+.idea/
+.vscode/
+*.iml
+
+# Flutter
+apps/user-app/.dart_tool/
+apps/user-app/.packages
+apps/user-app/build/
+apps/user-app/.flutter-plugins
+apps/user-app/.flutter-plugins-dependencies
+apps/user-app/pubspec.lock
+
+# Python
+agents/**/__pycache__/
+agents/**/.venv/
+agents/**/*.egg-info/
+.venv/
+
+# WeChat miniprogram
+apps/inspect-mini/miniprogram_npm/
+apps/inspect-mini/node_modules/
+
+# OS / misc
+*.swp
+.pnpm-store/
+
+# Local SQLite (MVP)
+packages/db/prisma/*.db
+packages/db/prisma/*.db-journal
+
+apps/user-web/.env
